@@ -76,7 +76,7 @@ textarea{min-height:84px;resize:vertical}
 .pri.P1{background:var(--p1)}.pri.P2{background:var(--p2)}.pri.P3{background:var(--p3)}
 .status{font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:5px}
 .status::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
-.s-Open{color:var(--st-open)}.s-In-progress{color:var(--st-prog)}.s-Awaiting-parts{color:var(--st-parts)}.s-On-hold{color:var(--st-hold)}.s-Awaiting-sign-off{color:var(--st-sign)}.s-Signed-off{color:var(--st-done)}
+.s-Scheduled{color:var(--st-open)}.s-In-progress{color:var(--st-prog)}.s-To-Admin{color:var(--st-sign)}.s-Complete{color:var(--st-done)}
 .wo{font-family:var(--f-mono);font-size:12px;font-weight:500;background:var(--sunk);border:1px solid var(--line);border-radius:4px;padding:1px 6px}
 .flag{font-size:11px;font-weight:600;color:var(--p2);border:1px solid var(--p2);border-radius:4px;padding:0 6px}
 .empty{text-align:center;color:var(--muted);padding:40px 16px;border:1px dashed var(--line);border-radius:12px}
@@ -116,7 +116,7 @@ nav.tabs .wrap{display:flex;align-items:center;gap:6px;padding-block:8px}
 .callout{border-radius:12px;padding:12px 14px;margin:12px 0;display:grid;gap:8px}
 .callout.sign{background:var(--sunk);border:1px solid var(--st-sign)}
 .callout.back{background:var(--sunk);border:1px solid var(--p2)}
-.callout.wo{background:var(--sunk);border:1px dashed var(--p2)}
+.callout.ifm{background:var(--sunk);border:1px dashed var(--p2)}
 .callout h4{margin:0;font-size:14px}
 
 section.block{margin-top:22px}
@@ -168,6 +168,14 @@ label.f .h{font-weight:400;color:var(--muted);font-size:12px}
 .tag.Planned{color:var(--st-sign);border:1px solid var(--st-sign)}
 .tag.Running{background:var(--accent);color:var(--accent-ink)}
 .daybtns{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:12px 0 18px}
+.stages{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin:14px 0 4px}
+.stage{display:grid;gap:5px;font-size:11px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;color:var(--muted);text-align:center}
+.stage .bar{height:6px;border-radius:3px;background:var(--line)}
+.stage.done .bar{background:var(--st-done)}.stage.now .bar{background:var(--accent)}.stage.now{color:var(--ink)}
+.quote{display:flex;gap:10px;flex-wrap:wrap;align-items:baseline;font-family:var(--f-mono);font-size:13px}
+.quote .over{color:var(--p1);font-weight:600}.quote .under{color:var(--st-done);font-weight:600}
+.paper{display:flex;gap:10px;align-items:flex-start;font-size:14px}
+.paper input{width:22px;height:22px;flex:none;accent-color:var(--accent);margin-top:1px}
 
 /* time picker */
 .seg{display:grid;grid-template-columns:1fr 1fr;background:var(--sunk);border-radius:12px;padding:4px;gap:4px}
@@ -240,7 +248,7 @@ label.f .h{font-weight:400;color:var(--muted);font-size:12px}
   <div class="clockbar" id="clockBar" hidden><div class="wrap"><span class="dot"></span><span class="t" id="clockText"></span><span class="c" id="clockTime"></span><button id="clockStop">Clock off</button></div></div>
 
   <main class="wrap">
-    <div id="viewJobs">
+    <div id="viewJobs" hidden>
       <div class="filters">
         <input id="q" type="text" placeholder="Search jobs, WO numbers, locations…" autocomplete="off">
         <div class="chips" id="jobChips"></div>
@@ -250,7 +258,7 @@ label.f .h{font-weight:400;color:var(--muted);font-size:12px}
       <div class="list" id="jobList"></div>
     </div>
 
-    <div id="viewTime" hidden>
+    <div id="viewTime">
       <div id="tsWho" style="padding-top:14px" hidden><select id="tsUser" aria-label="Whose timesheet"></select></div>
       <div class="weekbar"><button class="btn small" id="wkPrev">←</button><div class="wk" id="wkLabel"></div><button class="btn small" id="wkNext">→</button></div>
       <div class="days" id="dayStrip"></div>
@@ -259,23 +267,24 @@ label.f .h{font-weight:400;color:var(--muted);font-size:12px}
       <div id="dayList"></div>
       <div class="daybtns">
         <button class="btn primary" id="btnLog">+ Log time</button>
-        <button class="btn" id="btnPlan">+ Schedule</button>
+        <button class="btn" id="btnNewJob">+ New job</button>
         <button class="btn dark" id="btnClock">Clock on</button>
       </div>
     </div>
 
     <div id="viewTeam" hidden>
-      <section class="block"><div class="bh"><h2>Awaiting sign-off</h2><span class="tot" id="signCount"></span></div><div id="signList"></div></section>
+      <section class="block"><div class="bh"><h2>To Admin</h2><span class="tot" id="signCount"></span></div><div id="signList"></div></section>
       <section class="block"><div class="bh"><h2>Today on site</h2><span class="tot" id="todayLbl"></span></div><div class="board" id="board"></div></section>
+      <section class="block"><div class="bh"><h2>Locations</h2><button class="btn small" id="syncLocs">Refresh from heater list</button></div><div class="sub" id="locCount"></div></section>
       <section class="block"><div class="bh"><h2>People</h2><button class="btn small primary" id="addPerson">+ Add engineer</button></div><div id="people"></div></section>
     </div>
   </main>
 
   <nav class="tabs"><div class="wrap">
-    <button class="tab" id="tabJobs" aria-current="page">Jobs</button>
-    <button class="tab" id="tabTime">Timesheet</button>
+    <button class="tab" id="tabTime" aria-current="page">Timesheet</button>
+    <button class="tab" id="tabJobs">Jobs</button>
     <button class="tab" id="tabTeam" hidden>Team<span class="badge" id="teamBadge" hidden></span></button>
-    <button class="newbtn" id="newJobBtn">+ Job</button>
+    <button class="newbtn" id="newJobBtn">+ New job</button>
   </div></nav>
 </div>
 
@@ -292,14 +301,27 @@ label.f .h{font-weight:400;color:var(--muted);font-size:12px}
     <label class="f">What's the job?<input type="text" id="jfName" maxlength="140" required placeholder="e.g. Emergency light failed on stairwell B"></label>
     <div class="grid2">
       <label class="f">Area<select id="jfArea" required></select></label>
-      <label class="f">Exact location<input type="text" id="jfLoc" maxlength="140" placeholder="e.g. Apt block 4, 2nd floor landing"></label>
+      <label class="f">Location<span class="h">Units and rooms from the heater PPM list – or type your own</span><input type="text" id="jfLoc" maxlength="140" list="locList" autocomplete="off" placeholder="Start typing – e.g. Anchor Drive 012"></label>
+    </div>
+    <div id="jfWhen" class="ro" style="display:grid;gap:10px">
+      <div class="lab">When – books it on the timesheet</div>
+      <div class="days" id="jfDays" style="margin:0"></div>
+      <input type="date" id="jfDate" aria-label="Date">
+      <div class="clock2">
+        <div class="tbox"><span class="lab">Start</span><button type="button" class="tv" id="jfStartBtn">08:00</button>
+          <div class="adj"><button type="button" data-t="s" data-d="-60">−1h</button><button type="button" data-t="s" data-d="-15">−15</button><button type="button" data-t="s" data-d="15">+15</button><button type="button" data-t="s" data-d="60">+1h</button></div></div>
+        <div class="tbox"><span class="lab">Time needed</span><button type="button" class="tv" id="jfEstBtn" style="font-size:28px">2h 00m</button>
+          <div class="adj"><button type="button" data-t="d" data-d="-60">−1h</button><button type="button" data-t="d" data-d="-15">−15</button><button type="button" data-t="d" data-d="15">+15</button><button type="button" data-t="d" data-d="60">+1h</button></div></div>
+      </div>
+      <div class="chips" id="jfDur"></div>
+      <div class="summary" id="jfSummary"></div>
     </div>
     <div class="grid2">
       <label class="f">Job type<select id="jfType"></select></label>
       <label class="f">Priority<select id="jfPri"><option value="P1">P1 Emergency</option><option value="P2">P2 Urgent</option><option value="P3" selected>P3 Routine</option><option value="P4">P4 Planned</option></select></label>
     </div>
     <label class="f" id="jfAssignWrap">Assign to<select id="jfAssign"></select></label>
-    <div class="sub" id="jfSelfNote">This job will be assigned to you.</div>
+    <div class="sub" id="jfSelfNote">This job goes on your timesheet.</div>
     <label class="f">Details<span class="h">Fault reported, who reported it, access, isolations needed</span><textarea id="jfDesc" maxlength="4000"></textarea></label>
     <label class="f">IFMHub work order no.<span class="h">Leave blank if it isn't on IFMHub yet. The app flags it so it gets logged.</span><input type="text" id="jfWo" maxlength="40"></label>
     <button class="btn primary block" type="submit" id="jfSave">Raise job</button>
@@ -310,7 +332,7 @@ label.f .h{font-weight:400;color:var(--muted);font-size:12px}
 <div class="sheet" id="timeSheet" hidden>
   <div class="sheethead"><div class="wrap"><button class="back" id="teBack">✕ Cancel</button><div class="ttl" id="teTitle">Log time</div></div></div>
   <form class="wrap form" id="teForm">
-    <div class="seg" id="teMode"><button type="button" data-v="Done">Worked</button><button type="button" data-v="Planned">Scheduled</button></div>
+    <div class="seg" id="teMode"><button type="button" data-v="Done">Worked</button><button type="button" data-v="Planned">Booked</button></div>
     <label class="f" id="teUserWrap" hidden>Engineer<select id="teUser"></select></label>
     <div>
       <div class="lab" style="margin-bottom:6px">What</div>
@@ -320,7 +342,7 @@ label.f .h{font-weight:400;color:var(--muted);font-size:12px}
     <label class="f">Description<input type="text" id="teName" maxlength="140" placeholder="e.g. PPM – Emergency lights" required></label>
     <div class="grid2">
       <label class="f">Area<select id="teArea"></select></label>
-      <label class="f">Location<input type="text" id="teLoc" maxlength="140" placeholder="e.g. Apartment blocks 1–6"></label>
+      <label class="f">Location<input type="text" id="teLoc" maxlength="140" list="locList" autocomplete="off" placeholder="Start typing a unit or room"></label>
     </div>
     <div>
       <div class="lab" style="margin-bottom:6px">Day</div>
@@ -340,6 +362,7 @@ label.f .h{font-weight:400;color:var(--muted);font-size:12px}
     <div class="summary" id="teSummary"></div>
     <label class="f">Note<input type="text" id="teNote" maxlength="500" placeholder="Optional"></label>
     <button class="btn primary block" type="submit" id="teSave">Save</button>
+    <button class="btn block" type="button" id="teOpenJob" hidden>Open job</button>
     <button class="btn warn block" type="button" id="teDelete" hidden>Delete entry</button>
   </form>
 </div>
@@ -380,6 +403,7 @@ label.f .h{font-weight:400;color:var(--muted);font-size:12px}
   </div>
 </div>
 
+<datalist id="locList"></datalist>
 <div class="toast" id="toast" hidden></div>
 
 <script>
@@ -388,7 +412,7 @@ var S={token:null,d:null,filter:null,area:"",q:"",job:null,weekOff:0,day:null,ts
 var JOB_TYPES=["Reactive","PPM","Back job","Remedial","Project / install","Follow-on"];
 var TIME_TYPES=["PPM","Reactive","Back job","Project","Travel","Training","Admin","Other"];
 var PRI={P1:"P1 Emergency",P2:"P2 Urgent",P3:"P3 Routine",P4:"P4 Planned"};
-var WORK_STATUSES=["Open","In progress","Awaiting parts","On hold"];
+var STAGES=["Scheduled","In progress","To Admin","Complete"];
 
 function $(id){return document.getElementById(id);}
 function el(tag,attrs){var e=document.createElement(tag);if(attrs)for(var k in attrs){var v=attrs[k];if(v==null||v===false)continue;if(k==="class")e.className=v;else if(k==="text")e.textContent=v;else if(k.slice(0,2)==="on")e.addEventListener(k.slice(2),v);else e.setAttribute(k,v===true?"":v);}
@@ -403,7 +427,7 @@ var toastT;function toast(m,err){var t=$("toast");t.textContent=m;t.className="t
 function pad(n){return(n<10?"0":"")+n;}
 function toMin(s){var m=/^(\d{1,2}):(\d{2})$/.exec(s||"");return m?(+m[1])*60+(+m[2]):0;}
 function fromMin(m){m=((m%1440)+1440)%1440;return pad(Math.floor(m/60))+":"+pad(m%60);}
-function dur(a,b){var d=toMin(b)-toMin(a);if(d<=0)d+=1440;return d;}
+function dur(a,b){var d=toMin(b)-toMin(a);if(d<0)d+=1440;return d;}
 function fmtH(h){var m=Math.round((h||0)*60);return Math.floor(m/60)+"h "+pad(m%60)+"m";}
 function ymd(d){return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());}
 function parseYmd(s){var p=s.split("-");return new Date(+p[0],+p[1]-1,+p[2]);}
@@ -447,12 +471,16 @@ function loggedIn(tok){S.token=tok;store("sj_token",tok);$("loginView").hidden=t
 
 /* ===================== load ===================== */
 function load(first){return call("boot",S.token).then(function(d){S.d=d;S.extraTime={};
-  if(first){S.filter=isAdmin()?"live":"mine";S.tsUser=d.me.id;S.day=d.today;buildStatic();$("appView").hidden=false;setTab("jobs");}
+  if(first){S.filter=isAdmin()?"live":"mine";S.tsUser=d.me.id;S.day=d.today;buildStatic();$("appView").hidden=false;setTab("time");}
   renderAll();}).catch(function(){});}
 function renderAll(){if(!S.d)return;$("whoBtn").textContent=S.d.me.name+(isAdmin()?" · Admin":"");$("tabTeam").hidden=!isAdmin();
-  var waiting=S.d.jobs.filter(function(j){return j.status==="Awaiting sign-off";}).length;$("teamBadge").hidden=!waiting;$("teamBadge").textContent=waiting;
+  var waiting=S.d.jobs.filter(function(j){return j.status==="To Admin";}).length;$("teamBadge").hidden=!waiting;$("teamBadge").textContent=waiting;
   renderChips();renderJobs();renderTime();if(isAdmin()&&!$("viewTeam").hidden)renderTeam();tick();}
-function buildStatic(){fillSel($("areaFilter"),S.d.areas,"All areas");fillSel($("jfArea"),S.d.areas,"Choose area…");fillSel($("jfType"),JOB_TYPES);fillSel($("teArea"),S.d.areas,"—");
+function areaSel(sel,first){var cur=sel.value;sel.innerHTML="";sel.append(el("option",{value:""},first));
+  [["Village","Villages"],["Venue","Venues"],["Other","Other areas"]].forEach(function(g){var ps=S.d.places.filter(function(p){return p.group===g[0];});if(!ps.length)return;
+    var og=el("optgroup",{label:g[1]});ps.forEach(function(p){og.append(el("option",{value:p.name},p.name));});sel.append(og);});sel.value=cur;}
+function fillLocs(area){var dl=$("locList");dl.innerHTML="";var p=S.d.places.filter(function(x){return x.name===area;})[0];if(!p)return;p.locs.forEach(function(l){dl.append(el("option",{value:l}));});}
+function buildStatic(){areaSel($("areaFilter"),"All areas");areaSel($("jfArea"),"Choose area…");fillSel($("jfType"),JOB_TYPES);areaSel($("teArea"),"—");
   var act=S.d.users.filter(function(u){return u.active;});
   fillSel($("tsUser"),act.map(function(u){return[u.id,u.name+(u.id===S.d.me.id?" (me)":"")];}));$("tsUser").value=S.tsUser;$("tsWho").hidden=!isAdmin();}
 
@@ -462,10 +490,10 @@ function setTab(t){$("viewJobs").hidden=t!=="jobs";$("viewTime").hidden=t!=="tim
 $("tabJobs").onclick=function(){setTab("jobs");};$("tabTime").onclick=function(){setTab("time");};$("tabTeam").onclick=function(){setTab("team");};
 
 /* ===================== jobs list ===================== */
-function filterDefs(){var me=S.d.me.id,live=function(j){return j.status!=="Signed off";};
+function filterDefs(){var me=S.d.me.id,live=function(j){return j.status!=="Complete";};
   var defs=[["mine","My jobs",function(j){return live(j)&&j.assignedTo===me;}],["live","All live",live]];
   if(isAdmin())defs.push(["unassigned","Unassigned",function(j){return live(j)&&!j.assignedTo;}]);
-  defs.push(["sign","Awaiting sign-off",function(j){return j.status==="Awaiting sign-off";}],["noifm","Not on IFMHub",function(j){return live(j)&&!j.woRef;}],["done","Signed off",function(j){return j.status==="Signed off";}],["all","All",function(){return true;}]);
+  defs.push(["noday","Needs a day",function(j){return live(j)&&j.status!=="To Admin"&&!j.date;}],["toadmin","To Admin",function(j){return j.status==="To Admin";}],["noifm","Not on IFMHub",function(j){return live(j)&&!j.woRef;}],["done","Complete",function(j){return j.status==="Complete";}],["all","All",function(){return true;}]);
   return defs;}
 function renderChips(){var box=$("jobChips");box.innerHTML="";filterDefs().forEach(function(f){var n=S.d.jobs.filter(f[2]).length;
   box.append(el("button",{class:"chip","aria-pressed":S.filter===f[0]?"true":"false",onclick:function(){S.filter=f[0];renderChips();renderJobs();}},f[1],f[0]!=="all"&&f[0]!=="done"?el("span",{class:"n"},n):null));});}
@@ -474,7 +502,7 @@ $("areaFilter").onchange=function(e){S.area=e.target.value;renderJobs();};
 function renderJobs(){var f=filterDefs().filter(function(x){return x[0]===S.filter;})[0]||filterDefs()[1];
   var arr=S.d.jobs.filter(f[2]);if(S.area)arr=arr.filter(function(j){return j.area===S.area;});
   if(S.q)arr=arr.filter(function(j){return[j.ref,j.woRef,j.title,j.area,j.location,j.description].join(" ").toLowerCase().indexOf(S.q)>=0;});
-  var pr={P1:0,P2:1,P3:2,P4:3};arr.sort(function(a,b){return(a.status==="Signed off")-(b.status==="Signed off")||(pr[a.priority]-pr[b.priority])||String(b.createdAt).localeCompare(String(a.createdAt));});
+  var pr={P1:0,P2:1,P3:2,P4:3};arr.sort(function(a,b){return(a.status==="Complete")-(b.status==="Complete")||(pr[a.priority]-pr[b.priority])||String(b.createdAt).localeCompare(String(a.createdAt));});
   var running={};runningEntries().forEach(function(t){running[t.jobId]=1;});
   $("jobCount").textContent=arr.length+" job"+(arr.length===1?"":"s");
   var list=$("jobList");list.innerHTML="";
@@ -484,21 +512,43 @@ function renderJobs(){var f=filterDefs().filter(function(x){return x[0]===S.filt
     el("span",{class:"body"},
       el("span",{class:"line1"},el("span",{class:"pri "+j.priority},j.priority),j.woRef?el("span",{class:"wo"},"WO "+j.woRef):el("span",{class:"flag"},"Not on IFMHub"),el("span",{class:sCls(j.status)},j.status),running[j.id]?el("span",{class:"tag Running"},"On clock"):null),
       el("h3",null,j.title),
-      el("span",{class:"meta"},el("span",null,j.area+(j.location?" · "+j.location:"")),el("span",null,j.type),el("span",null,j.assignedTo?"👷 "+uname(j.assignedTo):"Unassigned"),el("span",{class:"ref"},j.ref),el("span",null,ago(j.createdAt))))));});}
+      el("span",{class:"meta"},el("span",null,j.area+(j.location?" · "+j.location:"")),el("span",null,j.type),el("span",null,j.assignedTo?"👷 "+uname(j.assignedTo):"Unassigned"),el("span",{class:"ref"},j.ref),el("span",null,j.date?"📅 "+fmtD(j.date)+" "+j.start+(j.estHours?" · "+fmtH(+j.estHours):""):"Needs a day")))));});}
 
 /* ===================== job form ===================== */
-$("newJobBtn").onclick=function(){openJobForm(null);};
+$("newJobBtn").onclick=function(){openJobForm(null,{date:$("viewTime").hidden?S.d.today:S.day});};
+$("btnNewJob").onclick=function(){openJobForm(null,{date:S.day});};
 $("jfBack").onclick=function(){$("jobFormSheet").hidden=true;};
-function openJobForm(job){var f=$("jobForm");f.reset();S.editJob=job;
-  $("jfTitle").textContent=job?"Edit job":"Raise a job";$("jfSave").textContent=job?"Save changes":"Raise job";
+$("jfArea").onchange=function(){fillLocs($("jfArea").value);};$("jfLoc").onfocus=function(){fillLocs($("jfArea").value);};
+$("teArea").onchange=function(){fillLocs($("teArea").value);};$("teLoc").onfocus=function(){fillLocs($("teArea").value);};
+function openJobForm(job,pre){var f=$("jobForm");f.reset();S.editJob=job;pre=pre||{};
+  $("jfTitle").textContent=job?(job.date?"Edit job":"Book it in"):"New job";$("jfSave").textContent=job?"Save":"Book it in";
   var act=S.d.users.filter(function(u){return u.active;});
-  fillSel($("jfAssign"),act.map(function(u){return[u.id,u.name+(u.id===S.d.me.id?" (me)":"")];}),"Unassigned");
+  fillSel($("jfAssign"),act.map(function(u){return[u.id,u.name+(u.id===S.d.me.id?" (me)":"")];}),"Unassigned – not on a timesheet yet");
+  $("jfAssign").value=isAdmin()&&S.tsUser?S.tsUser:S.d.me.id;
   $("jfAssignWrap").hidden=!isAdmin()||!!job;$("jfSelfNote").hidden=isAdmin()||!!job;
-  $("jfPri").value="P3";
+  $("jfPri").value="P3";areaSel($("jfArea"),"Choose area…");
+  var d0=pre.date&&pre.date>=S.d.today?pre.date:S.d.today;
+  S.jf={date:job?(job.date||d0):d0,start:job&&job.start?job.start:"08:00",est:job&&+job.estHours?+job.estHours:2};
   if(job){$("jfName").value=job.title;$("jfArea").value=job.area;$("jfLoc").value=job.location||"";$("jfType").value=job.type;$("jfPri").value=job.priority;$("jfDesc").value=job.description||"";$("jfWo").value=job.woRef||"";}
-  $("jobFormSheet").hidden=false;$("jobFormSheet").scrollTop=0;}
-$("jobForm").onsubmit=function(e){e.preventDefault();var j={id:S.editJob?S.editJob.id:null,title:$("jfName").value,area:$("jfArea").value,location:$("jfLoc").value,type:$("jfType").value,priority:$("jfPri").value,description:$("jfDesc").value,woRef:$("jfWo").value,assignedTo:$("jfAssign").value};
-  $("jfSave").disabled=true;call("saveJob",S.token,j).then(function(r){$("jobFormSheet").hidden=true;toast(S.editJob?"Saved":"Job "+r.job.ref+" raised");showJob(r);load();}).catch(function(){}).then(function(){$("jfSave").disabled=false;});};
+  fillLocs($("jfArea").value);
+  var db=$("jfDur");db.innerHTML="";[["30m",.5],["1h",1],["1½h",1.5],["2h",2],["3h",3],["4h",4],["Full day",8]].forEach(function(x){db.append(el("button",{type:"button",class:"chip",onclick:function(){S.jf.est=x[1];jfRender();}},x[0]));});
+  jfRender();$("jobFormSheet").hidden=false;$("jobFormSheet").scrollTop=0;}
+function weekOf(day){var d=parseYmd(day),a=new Date(d);a.setDate(d.getDate()-((d.getDay()+6)%7));var o=[];for(var i=0;i<7;i++){var x=new Date(a);x.setDate(a.getDate()+i);o.push(ymd(x));}return o;}
+function jfRender(){var jf=S.jf,db=$("jfDays");db.innerHTML="";
+  weekOf(jf.date).forEach(function(d){db.append(el("button",{type:"button",class:"day"+(d===S.d.today?" today":""),"aria-pressed":d===jf.date?"true":"false",onclick:function(){jf.date=d;jfRender();}},
+    el("span",{class:"dn"},parseYmd(d).toLocaleDateString("en-GB",{weekday:"short"})),el("span",{class:"dd"},parseYmd(d).getDate())));});
+  $("jfDate").value=jf.date;$("jfStartBtn").textContent=jf.start;$("jfEstBtn").textContent=fmtH(jf.est);
+  document.querySelectorAll("#jfDur .chip").forEach(function(c,i){c.setAttribute("aria-pressed",[.5,1,1.5,2,3,4,8][i]===jf.est?"true":"false");});
+  var end=fromMin(toMin(jf.start)+Math.round(jf.est*60));$("jfSummary").innerHTML="";
+  $("jfSummary").append(fmtD(jf.date)+" · "+jf.start+" → "+end+" · ",el("b",null,fmtH(jf.est)),"  booked");}
+$("jfDate").onchange=function(e){if(e.target.value){S.jf.date=e.target.value;jfRender();}};
+document.querySelectorAll("#jfWhen .adj button").forEach(function(b){b.onclick=function(){var d=+b.dataset.d;
+  if(b.dataset.t==="s")S.jf.start=fromMin(toMin(S.jf.start)+d);else S.jf.est=Math.min(16,Math.max(.25,Math.round((S.jf.est*60+d)/15)*15/60));jfRender();};});
+$("jfStartBtn").onclick=function(){timeSel("Start time",toMin(S.jf.start),null,function(v){S.jf.start=fromMin(v);jfRender();});};
+$("jfEstBtn").onclick=function(){timeSel("Time needed",Math.round(S.jf.est*60),12,function(v){S.jf.est=Math.max(.25,v/60);jfRender();});};
+$("jobForm").onsubmit=function(e){e.preventDefault();var j={id:S.editJob?S.editJob.id:null,title:$("jfName").value,area:$("jfArea").value,location:$("jfLoc").value,type:$("jfType").value,priority:$("jfPri").value,description:$("jfDesc").value,woRef:$("jfWo").value,assignedTo:$("jfAssign").value,
+    date:S.jf.date,start:S.jf.start,estHours:S.jf.est};
+  $("jfSave").disabled=true;call("saveJob",S.token,j).then(function(r){$("jobFormSheet").hidden=true;toast(S.editJob?"Saved":"Booked in – "+r.job.ref);S.day=r.job.date||S.day;showJob(r);load();}).catch(function(){}).then(function(){$("jfSave").disabled=false;});};
 
 /* ===================== job detail ===================== */
 $("jobBack").onclick=function(){$("jobSheet").hidden=true;S.job=null;};
@@ -506,63 +556,68 @@ function openJob(id){var j=jobById(id);$("jobHeadRef").textContent=j?j.ref:"Job"
   call("getJob",S.token,id).then(showJob).catch(function(){$("jobSheet").hidden=true;});}
 function jobAct(fn){var args=[].slice.call(arguments,1);return call.apply(null,[fn,S.token].concat(args)).then(function(r){showJob(r);load();return r;});}
 function fact(k,v){return el("div",{class:"fact"},el("div",{class:"k"},k),el("div",{class:"v"},v));}
-function showJob(r){S.job=r;var j=r.job,box=$("jobBody"),can=r.canEdit,adm=r.isAdmin,closed=j.status==="Awaiting sign-off"||j.status==="Signed off";
+function stageBar(st){var i=STAGES.indexOf(st);return el("div",{class:"stages","aria-label":"Stage: "+st},STAGES.map(function(s,k){return el("div",{class:"stage"+(k<i?" done":k===i?" now":"")},el("div",{class:"bar"}),s);}));}
+function showJob(r){var prevSt=S.job&&S.job.job.id===r.job.id?S.job.job.status:null;S.job=r;var j=r.job,box=$("jobBody"),can=r.canEdit,adm=r.isAdmin,locked=j.status==="To Admin"||j.status==="Complete",me=S.d.me.id;
   $("jobHeadRef").textContent=j.ref;$("jobSheet").hidden=false;box.innerHTML="";
-  var tot=r.time.reduce(function(s,t){return s+(t.status==="Done"?+t.hours||0:0);},0);
-  var running=runningEntries().filter(function(t){return t.jobId===j.id&&t.userId===S.d.me.id;})[0];
+  var tot=r.time.reduce(function(s,t){return s+(t.status==="Done"?+t.hours||0:0);},0),est=+j.estHours||0;
+  var running=runningEntries().filter(function(t){return t.jobId===j.id&&t.userId===me;})[0];
+  var diff=est&&tot?tot-est:0;
   box.append(el("div",{class:"d-title"},j.title),
     el("div",{class:"line1"},el("span",{class:"pri "+j.priority},PRI[j.priority]||j.priority),el("span",{class:sCls(j.status)},j.status)),
-    el("div",{class:"facts"},fact("Area",j.area),fact("Location",j.location||"—"),fact("Type",j.type),fact("Assigned",j.assignedTo?uname(j.assignedTo):"Unassigned"),
-      fact("Raised",fmtDT(j.createdAt)+" · "+uname(j.createdBy)),fact("IFMHub WO",j.woRef||"Not logged yet"),
+    stageBar(j.status),
+    el("div",{class:"quote"},el("span",null,"Quoted "+(est?fmtH(est):"–")),el("span",null,"Worked "+fmtH(tot)),diff?el("span",{class:diff>0?"over":"under"},fmtH(Math.abs(diff))+(diff>0?" over":" under")):null),
+    el("div",{class:"facts"},fact("Area",j.area),fact("Location",j.location||"—"),fact("Booked",j.date?fmtD(j.date)+" · "+j.start:"Needs a day"),fact("Assigned",j.assignedTo?uname(j.assignedTo):"Unassigned"),
+      fact("Type",j.type),fact("IFMHub WO",j.woRef||"Not logged yet"),fact("Raised",fmtDT(j.createdAt)+" · "+uname(j.createdBy)),
       j.parentRef?fact("Back job from",j.parentRef):null,j.followOnRef?fact("Back job raised",j.followOnRef):null,
-      j.completedAt?fact("Completed",fmtDT(j.completedAt)+" · "+uname(j.completedBy)):null,
-      j.signedOffAt?fact("Signed off",fmtDT(j.signedOffAt)+" · "+uname(j.signedOffBy)):null),
-    j.description?el("div",{class:"desc"},j.description):null);
+      j.completedAt?fact("Sent to Admin",fmtDT(j.completedAt)+" · "+uname(j.completedBy)):null,
+      j.signedOffAt?fact("Completed",fmtDT(j.signedOffAt)+" · "+uname(j.signedOffBy)):null),
+    j.description?el("div",{class:"desc"},j.description):"");
 
-  // admin sign-off
-  if(adm&&j.status==="Awaiting sign-off"){var cm=el("textarea",{placeholder:"Comment (needed if sending back)",style:"min-height:60px"});
-    box.append(el("div",{class:"callout sign"},el("h4",null,"Ready for sign-off – completed by "+uname(j.completedBy)),
-      el("div",{class:"sub"},"Check the report, time ("+fmtH(tot)+") and materials below."),cm,
-      el("div",{class:"actions",style:"margin:0"},el("button",{class:"btn primary",onclick:function(){jobAct("signOff",j.id,true,cm.value).then(function(){toast("Signed off");});}},"✓ Sign off"),
-        el("button",{class:"btn warn",onclick:function(){jobAct("signOff",j.id,false,cm.value).then(function(){toast("Sent back to "+uname(j.assignedTo));});}},"Send back"))));}
-  else if(j.status==="Awaiting sign-off")box.append(el("div",{class:"callout sign"},el("h4",null,"Waiting for an admin to sign this off")));
+  // admin: paperwork check and complete
+  if(adm&&j.status==="To Admin"){var cm=el("textarea",{placeholder:"Comment – needed if sending back",style:"min-height:60px"}),pw=el("input",{type:"checkbox",id:"pwCheck"});
+    box.append(el("div",{class:"callout sign"},el("h4",null,"Sent to Admin by "+uname(j.completedBy)+" – check the paperwork"),
+      el("div",{class:"sub"},"Report, time ("+fmtH(tot)+(est?" against "+fmtH(est)+" quoted":"")+") and materials are below."),
+      el("label",{class:"paper"},pw,el("span",null,"Paperwork checked – job report, test certificates, photos and IFMHub close-out")),cm,
+      el("div",{class:"actions",style:"margin:0"},el("button",{class:"btn primary",onclick:function(){if(!pw.checked){toast("Tick the paperwork check first",true);return;}jobAct("signOff",j.id,true,cm.value,true).then(function(){toast("Job complete");});}},"✓ Mark complete"),
+        el("button",{class:"btn warn",onclick:function(){jobAct("signOff",j.id,false,cm.value,false).then(function(){toast("Sent back to "+uname(j.assignedTo));});}},"Send back"))));}
+  else if(j.status==="To Admin")box.append(el("div",{class:"callout sign"},el("h4",null,"With the admin"),el("div",{class:"sub"},"They'll check the paperwork and mark it complete, or send it back if something's missing.")));
   if(j.status==="In progress"&&j.signOffNote&&!j.signedOffAt)box.append(el("div",{class:"callout back"},el("h4",null,"Sent back by admin"),el("div",null,j.signOffNote)));
+  if(!j.date&&!locked&&(can||adm))box.append(el("div",{class:"callout ifm"},el("h4",{style:"color:var(--p2)"},"Not on a timesheet yet"),el("div",{class:"row2"},el("span",{class:"sub",style:"flex:1 1 180px"},"Pick a day, start time and how long it needs."),el("button",{class:"btn small primary",style:"flex:0 0 auto",onclick:function(){openJobForm(j);}},"Book it in"))));
 
-  // WO
-  if((can||j.createdBy===S.d.me.id)&&j.status!=="Signed off"){var wi=el("input",{type:"text",maxlength:"40",placeholder:"IFMHub WO no."});wi.value=j.woRef||"";
+  // IFMHub WO
+  if((can||j.createdBy===me)&&j.status!=="Complete"){var wi=el("input",{type:"text",maxlength:"40",placeholder:"IFMHub WO no."});wi.value=j.woRef||"";
     var save=function(){jobAct("setWo",j.id,wi.value).then(function(){toast("WO saved");});};
     box.append(j.woRef?el("div",{class:"actions"},wi,el("button",{class:"btn small",onclick:save},"Update WO")):
-      el("div",{class:"callout wo"},el("h4",{style:"color:var(--p2)"},"Not on IFMHub yet – log it there, then add the WO number"),el("div",{class:"row2"},wi,el("button",{class:"btn small primary",style:"flex:0 0 auto",onclick:save},"Save WO"))));}
+      el("div",{class:"callout ifm"},el("h4",{style:"color:var(--p2)"},"Not on IFMHub yet – log it there, then add the WO number"),el("div",{class:"row2"},wi,el("button",{class:"btn small primary",style:"flex:0 0 auto",onclick:save},"Save WO"))));}
 
   // actions
   var acts=el("div",{class:"actions"});
-  if(can&&!closed){
+  if(can&&!locked){
     acts.append(running?el("button",{class:"btn dark",onclick:function(){call("clockOff",S.token,running.id).then(function(){toast("Clocked off");load().then(function(){openJob(j.id);});});}},"■ Clock off"):
       el("button",{class:"btn primary",onclick:function(){call("clockOn",S.token,{jobId:j.id}).then(function(){toast("Clocked on to "+j.ref);load().then(function(){openJob(j.id);});});}},"▶ Clock on"));
     acts.append(el("button",{class:"btn",onclick:function(){openTime({mode:"Done",jobId:j.id});}},"+ Log time"));
-    var ss=el("select",{"aria-label":"Status",onchange:function(e){jobAct("setStatus",j.id,e.target.value);}});WORK_STATUSES.forEach(function(s){ss.append(el("option",{value:s,selected:s===j.status?true:null},s));});acts.append(ss);}
-  if(adm&&j.status!=="Signed off"){var as=el("select",{"aria-label":"Assign to",onchange:function(e){jobAct("assignJob",j.id,e.target.value).then(function(){toast("Assigned");});}});
-    as.append(el("option",{value:""},"Unassigned"));S.d.users.filter(function(u){return u.active;}).forEach(function(u){as.append(el("option",{value:u.id,selected:u.id===j.assignedTo?true:null},"Assign: "+u.name));});acts.append(as);
-    acts.append(el("button",{class:"btn",onclick:function(){openTime({mode:"Planned",jobId:j.id,userId:j.assignedTo||S.d.me.id});}},"Schedule"));}
-  if(can&&j.status!=="Signed off")acts.append(el("button",{class:"btn",onclick:function(){openJobForm(j);}},"Edit"));
-  if(adm&&j.status==="Signed off")acts.append(el("button",{class:"btn",onclick:function(){jobAct("setStatus",j.id,"In progress");}},"Reopen"));
+    var ss=el("select",{"aria-label":"Stage",onchange:function(e){jobAct("setStatus",j.id,e.target.value);}});["Scheduled","In progress"].forEach(function(s){ss.append(el("option",{value:s,selected:s===j.status?true:null},s));});acts.append(ss);
+    acts.append(el("button",{class:"btn",onclick:function(){openJobForm(j);}},"Edit / reschedule"));}
+  if(adm&&j.status!=="Complete"){var as=el("select",{"aria-label":"Assign to",onchange:function(e){jobAct("assignJob",j.id,e.target.value).then(function(){toast(e.target.value?"Booked on "+uname(e.target.value)+"'s timesheet":"Unassigned");});}});
+    as.append(el("option",{value:""},"Unassigned"));S.d.users.filter(function(u){return u.active;}).forEach(function(u){as.append(el("option",{value:u.id,selected:u.id===j.assignedTo?true:null},"Assign: "+u.name));});acts.append(as);}
+  if(adm&&j.status==="Complete")acts.append(el("button",{class:"btn",onclick:function(){jobAct("setStatus",j.id,"In progress");}},"Reopen job"));
   if(acts.childNodes.length)box.append(acts);
-  if(!can&&!adm&&j.assignedTo&&j.status!=="Signed off")box.append(el("div",{class:"sub"},"Assigned to "+uname(j.assignedTo)+". You can add notes, but only they or an admin can update it."));
+  if(!can&&!adm&&j.assignedTo&&j.status!=="Complete")box.append(el("div",{class:"sub"},"Assigned to "+uname(j.assignedTo)+". You can add notes, but only they or an admin can update it."));
 
   // time
-  var ts=el("section",{class:"block"},el("div",{class:"bh"},el("h2",null,"Time"),el("span",{class:"tot"},r.time.length?"Total "+fmtH(tot):"")));
-  if(!r.time.length)ts.append(el("div",{class:"none"},"No time booked yet."));
+  var ts=el("section",{class:"block"},el("div",{class:"bh"},el("h2",null,"Time"),el("span",{class:"tot"},r.time.length?"Worked "+fmtH(tot):"")));
+  if(!r.time.length)ts.append(el("div",{class:"none"},"Nothing on the timesheet for this job yet."));
   r.time.slice().sort(function(a,b){return(a.date+a.start).localeCompare(b.date+b.start);}).forEach(function(t){
-    ts.append(el("div",{class:"r"},el("div",{class:"main"},uname(t.userId),el("div",{class:"sub"},fmtD(t.date)+" · "+t.start+(t.end?"–"+t.end:" (on clock)")+(t.status==="Planned"?" · scheduled":"")+(t.note?" · "+t.note:""))),
-      el("div",{class:"num"},t.status==="Running"?"live":fmtH(t.hours)),el("span")));});
+    ts.append(el("div",{class:"r"},el("div",{class:"main"},uname(t.userId),el("div",{class:"sub"},fmtD(t.date)+" · "+t.start+(t.end?"–"+t.end:" (on clock)")+(t.status==="Planned"?" · booked":"")+(t.note?" · "+t.note:""))),
+      el("div",{class:"num"},t.status==="Running"?"live":t.status==="Planned"?"("+fmtH(t.hours)+")":fmtH(t.hours)),el("span")));});
   box.append(ts);
 
   // materials
   var ms=el("section",{class:"block"},el("div",{class:"bh"},el("h2",null,"Materials"),el("span",{class:"tot"},r.materials.length?r.materials.length+" line"+(r.materials.length>1?"s":""):"")));
   if(!r.materials.length)ms.append(el("div",{class:"none"},"No materials logged."));
   r.materials.forEach(function(m){ms.append(el("div",{class:"r"},el("div",{class:"main"},m.item,el("div",{class:"sub"},(m.source||"")+" · "+uname(m.userId))),el("div",{class:"num"},m.qty+" "+m.unit),
-    (m.userId===S.d.me.id||adm)&&j.status!=="Signed off"?delBtn("✕",function(){jobAct("deleteMaterial",m.id);}):el("span")));});
-  if(can&&!closed){var mi=el("input",{type:"text",maxlength:"160",placeholder:"Item e.g. 2.5mm T&E, LED batten 5ft, 20A MCB"}),mq=el("input",{type:"number",min:"0",step:"any",placeholder:"Qty"}),
+    (m.userId===me||adm)&&j.status!=="Complete"?delBtn("✕",function(){jobAct("deleteMaterial",m.id);}):el("span")));});
+  if(can&&!locked){var mi=el("input",{type:"text",maxlength:"160",placeholder:"Item e.g. 2.5mm T&E, LED batten 5ft, 20A MCB"}),mq=el("input",{type:"number",min:"0",step:"any",placeholder:"Qty"}),
     mu=el("select",null,["each","m","box","pack","roll","length"].map(function(x){return el("option",null,x);})),msrc=el("select",null,["Van stock","Site stores","Purchased","Recovered / reused"].map(function(x){return el("option",null,x);}));
     ms.append(el("form",{class:"addform",onsubmit:function(e){e.preventDefault();if(!mi.value.trim()){toast("Enter the item",true);return;}jobAct("addMaterial",j.id,{item:mi.value,qty:mq.value,unit:mu.value,source:msrc.value});}},mi,el("div",{class:"g3"},mq,mu,msrc),el("button",{class:"btn small",type:"submit"},"Add material")));}
   box.append(ms);
@@ -576,27 +631,27 @@ function showJob(r){S.job=r;var j=r.job,box=$("jobBody"),can=r.canEdit,adm=r.isA
   box.append(ns);
 
   // report
-  var rs=el("section",{class:"block"},el("div",{class:"bh"},el("h2",null,"Job report"),el("span",{class:"row2",style:"flex:0 0 auto;gap:6px"},
+  var rs=el("section",{class:"block"},el("div",{class:"bh"},el("h2",null,"Job report"),el("span",{style:"display:flex;gap:6px;flex-wrap:wrap"},
     el("button",{class:"btn small primary",onclick:function(){copyText(ifmText(),"Copied – paste into the IFMHub close-out");}},"Copy for IFMHub"),
     el("button",{class:"btn small",onclick:function(){copyText(fullReport(),"Full report copied");}},"Full report"))));
-  if(can&&!closed){var w=el("textarea",{maxlength:"4000",placeholder:"What you found and what you did"}),fi=el("textarea",{maxlength:"4000"}),fu=el("textarea",{maxlength:"4000"}),fo=el("input",{type:"checkbox"});
+  if(can&&!locked){var w=el("textarea",{maxlength:"4000",placeholder:"What you found and what you did"}),fi=el("textarea",{maxlength:"4000"}),fu=el("textarea",{maxlength:"4000"}),fo=el("input",{type:"checkbox"});
     w.value=j.workDone||"";fi.value=j.findings||"";fu.value=j.furtherWork||"";S.rep={w:w,fi:fi,fu:fu};
     rs.append(el("form",{class:"form",style:"padding-top:4px",onsubmit:function(e){e.preventDefault();if(!w.value.trim()){toast("Add the work carried out first",true);w.focus();return;}
-        jobAct("completeJob",j.id,{workDone:w.value,findings:fi.value,furtherWork:fu.value,followOn:fo.checked}).then(function(x){toast("Sent for sign-off"+(x.job.followOnRef?" · back job "+x.job.followOnRef+" raised":""));});}},
+        jobAct("sendToAdmin",j.id,{workDone:w.value,findings:fi.value,furtherWork:fu.value,followOn:fo.checked}).then(function(x){toast("Sent to Admin"+(x.job.followOnRef?" · back job "+x.job.followOnRef+" raised":""));});}},
       el("label",{class:"f"},"Work carried out",w),el("label",{class:"f"},"Findings / test results",el("span",{class:"h"},"Readings, defects found, certs issued"),fi),
       el("label",{class:"f"},"Further work needed",el("span",{class:"h"},"Anything outstanding"),fu),el("label",{class:"toggle"},fo," Raise a back job from the further work"),
       el("div",{class:"actions"},el("button",{class:"btn",type:"button",onclick:function(){jobAct("saveReport",j.id,{workDone:w.value,findings:fi.value,furtherWork:fu.value}).then(function(){toast("Draft saved");});}},"Save draft"),
-        el("button",{class:"btn primary",type:"submit"},"Complete – send for sign-off"))));}
+        el("button",{class:"btn primary",type:"submit"},"Send to Admin →"))));}
   else{S.rep=null;rs.append(el("div",{class:"ro"},el("div",{class:"lab"},"Work carried out"),el("div",{class:"v"},j.workDone||"—"),el("div",{class:"lab"},"Findings / test results"),el("div",{class:"v"},j.findings||"—"),el("div",{class:"lab"},"Further work needed"),el("div",{class:"v"},j.furtherWork||"None")));}
-  box.append(rs);}
+  box.append(rs);if(prevSt&&prevSt!==j.status)$("jobSheet").scrollTop=0;}
 function repVals(){var j=S.job.job,r=S.rep;return{w:(r?r.w.value:j.workDone)||"",fi:(r?r.fi.value:j.findings)||"",fu:(r?r.fu.value:j.furtherWork)||""};}
 function ifmText(){var x=S.job,v=repVals(),tot=x.time.reduce(function(s,t){return s+(t.status==="Done"?+t.hours||0:0);},0);
   return["Work carried out: "+(v.w.trim()||"—"),v.fi.trim()?"Findings/tests: "+v.fi.trim():null,"Materials: "+(x.materials.length?x.materials.map(function(m){return m.qty+" "+m.unit+" "+m.item;}).join(", "):"None"),
     "Time on job: "+tot.toFixed(2)+" hrs","Further works: "+(v.fu.trim()||"None")+(x.job.followOnRef?" (back job "+x.job.followOnRef+")":"")].filter(Boolean).join("\n");}
 function fullReport(){var x=S.job,j=x.job,v=repVals(),per={},tot=0;x.time.forEach(function(t){if(t.status!=="Done")return;tot+=+t.hours||0;per[t.userId]=(per[t.userId]||0)+(+t.hours||0);});
   var L=["JOB REPORT – "+j.ref,"Butlin's Skegness · CBRE engineering","","Job: "+j.title,"Area: "+j.area+(j.location?" – "+j.location:""),"Type: "+j.type+" · Priority: "+(PRI[j.priority]||j.priority),"IFMHub WO: "+(j.woRef||"not logged"),
-    "Raised: "+fmtDT(j.createdAt)+" by "+uname(j.createdBy),"Status: "+j.status];
-  if(j.completedAt)L.push("Completed: "+fmtDT(j.completedAt)+" by "+uname(j.completedBy));if(j.signedOffAt)L.push("Signed off: "+fmtDT(j.signedOffAt)+" by "+uname(j.signedOffBy));
+    "Raised: "+fmtDT(j.createdAt)+" by "+uname(j.createdBy),"Stage: "+j.status,j.estHours?"Quoted: "+fmtH(+j.estHours):"Quoted: –"];
+  if(j.completedAt)L.push("Sent to Admin: "+fmtDT(j.completedAt)+" by "+uname(j.completedBy));if(j.signedOffAt)L.push("Completed: "+fmtDT(j.signedOffAt)+" by "+uname(j.signedOffBy));
   if(j.description)L.push("","Reported fault:",j.description);
   L.push("","Time on job: "+fmtH(tot));for(var id in per)L.push("  - "+uname(id)+": "+fmtH(per[id]));
   L.push("","Materials used:");if(!x.materials.length)L.push("  None");x.materials.forEach(function(m){L.push("  - "+m.qty+" "+m.unit+" "+m.item+" ("+m.source+")");});
@@ -626,17 +681,16 @@ function renderTime(){if(!S.d)return;var days=weekDays(S.weekOff),a=parseYmd(day
   $("wkTotal").textContent=fmtH(wk);$("wkWho").textContent=(S.tsUser===S.d.me.id?"My hours":uname(S.tsUser)+"'s hours")+" this week";
   $("dayTitle").textContent=S.day===S.d.today?"Today":fmtD(S.day,{weekday:"long",day:"numeric",month:"short"});
   var list=entriesFor(S.day),box=$("dayList");box.innerHTML="";$("dayTot").textContent=list.length?fmtH(hrsOf(list))+" worked":"";
-  if(!list.length)box.append(el("div",{class:"empty",style:"padding:24px 16px"},"Nothing logged or scheduled for this day."));
+  if(!list.length)box.append(el("div",{class:"empty",style:"padding:24px 16px"},"Nothing booked. Tap + New job to book work in, or + Log time."));
   list.forEach(function(t){var mine=t.userId===S.d.me.id||isAdmin();
     box.append(el("button",{class:"entry"+(t.status==="Planned"?" planned":t.status==="Running"?" running":""),onclick:function(){if(mine&&t.status!=="Running")openTime({entry:t});else if(t.jobId)openJob(t.jobId);}},
       el("div",{class:"tm"},t.start,el("small",null,t.status==="Running"?"on clock":t.end)),
-      el("div",{class:"what"},el("b",null,t.title),el("div",{class:"sub"},[t.type,t.area,t.location].filter(Boolean).join(" · ")+(t.jobRef?" · "+t.jobRef:"")),t.note?el("div",{class:"sub"},t.note):null),
-      el("div",{style:"display:grid;gap:4px;justify-items:end"},t.status==="Done"?el("span",{class:"num"},fmtH(t.hours)):el("span",{class:"tag "+t.status},t.status==="Running"?"Live":"Planned"),
+      el("div",{class:"what"},el("b",null,t.title),el("div",{class:"sub"},[t.type,t.area,t.location].filter(Boolean).join(" · ")+(t.jobRef?" · "+t.jobRef:"")),t.jobId&&jobById(t.jobId)?el("span",{class:sCls(jobById(t.jobId).status)},jobById(t.jobId).status):null,t.note?el("div",{class:"sub"},t.note):null),
+      el("div",{style:"display:grid;gap:4px;justify-items:end"},t.status==="Done"?el("span",{class:"num"},fmtH(t.hours)):el("span",{class:"tag "+t.status},t.status==="Running"?"Live":"Booked"),
         t.status==="Planned"&&mine?el("span",{class:"btn small primary",role:"button",onclick:function(ev){ev.stopPropagation();openTime({entry:t,confirm:true});}},"Confirm"):null)));});
   var r=runningEntries()[0];$("btnClock").textContent=r?"Clock off":"Clock on";$("btnClock").className="btn "+(r?"warn":"dark");
   $("btnClock").hidden=S.tsUser!==S.d.me.id;}
 $("btnLog").onclick=function(){openTime({mode:"Done"});};
-$("btnPlan").onclick=function(){openTime({mode:"Planned"});};
 $("btnClock").onclick=function(){var r=runningEntries()[0];if(r)return clockOff(r);openTime({mode:"Clock"});};
 function clockOff(r){call("clockOff",S.token,r.id).then(function(){toast("Clocked off – check the times look right");load();}).catch(function(){});}
 $("clockStop").onclick=function(){var r=runningEntries()[0];if(r)clockOff(r);};
@@ -658,26 +712,26 @@ function openTime(o){var adm=isAdmin(),me=S.d.me.id,e=o.entry;
     start:e?e.start:null,end:e?e.end:null,clock:o.mode==="Clock"};
   if(!te.start){var now=new Date(),nm=Math.round((now.getHours()*60+now.getMinutes())/15)*15;
     if(te.mode==="Done"){te.end=fromMin(Math.min(nm,1425));te.start=fromMin(Math.max(0,nm-120));}else{te.start="08:00";te.end="10:00";}}
-  $("teTitle").textContent=o.mode==="Clock"?"Clock on":e?(o.confirm?"Confirm time":"Edit entry"):te.mode==="Planned"?"Schedule work":"Log time";
-  $("teMode").hidden=o.mode==="Clock";$("teSave").textContent=o.mode==="Clock"?"Clock on now":o.confirm?"Confirm – mark as worked":"Save";
-  $("teDelete").hidden=!e;
+  $("teTitle").textContent=o.mode==="Clock"?"Clock on":e?(o.confirm?"Confirm time":e.status==="Planned"?"Edit booking":"Edit entry"):"Log time";
+  $("teMode").hidden=!e||o.confirm;$("teOpenJob").hidden=!(e&&e.jobId);$("teSave").textContent=o.mode==="Clock"?"Clock on now":o.confirm?"Confirm – mark as worked":"Save";
+  $("teDelete").hidden=!e;$("teDelete").textContent=e&&e.status==="Planned"&&e.jobId?"Remove booking":"Delete entry";
   var act=S.d.users.filter(function(u){return u.active;});fillSel($("teUser"),act.map(function(u){return[u.id,u.name+(u.id===me?" (me)":"")];}));$("teUser").value=te.userId;$("teUserWrap").hidden=!adm||o.mode==="Clock";
   fillTeJobs();$("teJob").value=e?(e.jobId||""):(o.jobId||"");
-  $("teName").value=e?e.title:"";$("teArea").value=e?(e.area||""):"";$("teLoc").value=e?(e.location||""):"";$("teNote").value=e?(e.note||""):"";
+  areaSel($("teArea"),"—");$("teName").value=e?e.title:"";$("teArea").value=e?(e.area||""):"";$("teLoc").value=e?(e.location||""):"";$("teNote").value=e?(e.note||""):"";
   if(!e&&o.jobId)teFromJob();
   var pb=$("tePresets");pb.innerHTML="";S.d.presets.forEach(function(p){pb.append(el("button",{type:"button",class:"chip",onclick:function(){$("teName").value=p.title;S.te.type=p.type;$("teJob").value="";markPreset();}},p.title));});
   te.type=e?e.type:(o.jobId?(jobById(o.jobId)||{}).type:"");
   var db=$("teDur");db.innerHTML="";[["30m",30],["1h",60],["1½h",90],["2h",120],["3h",180],["4h",240],["Full day",510]].forEach(function(x){db.append(el("button",{type:"button",class:"chip",onclick:function(){S.te.end=fromMin(toMin(S.te.start)+x[1]);teRender();}},x[0]));});
   if(o.mode!=="Clock")setTeMode(te.mode);else teRender();markPreset();
   $("timeSheet").hidden=false;$("timeSheet").scrollTop=0;}
-function fillTeJobs(){var uid=$("teUser").value||S.d.me.id;var js=S.d.jobs.filter(function(j){return j.status!=="Signed off"&&(isAdmin()||j.assignedTo===uid);});
+function fillTeJobs(){var uid=$("teUser").value||S.d.me.id;var js=S.d.jobs.filter(function(j){return j.status!=="Complete"&&j.status!=="To Admin"&&(isAdmin()||j.assignedTo===uid);});
   fillSel($("teJob"),js.map(function(j){return[j.id,(j.woRef?"WO "+j.woRef:j.ref)+" – "+j.title];}),"Not linked to a job");}
 $("teUser").onchange=function(e){S.te.userId=e.target.value;var cur=$("teJob").value;fillTeJobs();$("teJob").value=cur;};
 $("teJob").onchange=function(){teFromJob();markPreset();};
-function teFromJob(){var j=jobById($("teJob").value);if(!j)return;$("teName").value=j.title;$("teArea").value=j.area||"";$("teLoc").value=j.location||"";S.te.type=j.type;}
+function teFromJob(){var j=jobById($("teJob").value);if(!j)return;$("teName").value=j.title;$("teArea").value=j.area||"";fillLocs(j.area);$("teLoc").value=j.location||"";S.te.type=j.type;}
 function markPreset(){var v=$("teName").value;document.querySelectorAll("#tePresets .chip").forEach(function(c){c.setAttribute("aria-pressed",c.textContent===v?"true":"false");});}
 $("teName").oninput=markPreset;
-document.querySelectorAll(".tbox .adj button").forEach(function(b){b.onclick=function(){var k=b.dataset.t==="s"?"start":"end",d=+b.dataset.d;
+document.querySelectorAll("#teForm .tbox .adj button").forEach(function(b){b.onclick=function(){var k=b.dataset.t==="s"?"start":"end",d=+b.dataset.d;
   if(k==="start"){var len=dur(S.te.start,S.te.end);S.te.start=fromMin(toMin(S.te.start)+d);S.te.end=fromMin(toMin(S.te.start)+len);}else S.te.end=fromMin(toMin(S.te.end)+d);teRender();};});
 function teRender(){var te=S.te,clock=te.clock;
   var days=weekDays(0);var wd=te.date?(function(){var d=parseYmd(te.date),a=new Date(d);a.setDate(d.getDate()-((d.getDay()+6)%7));var o=[];for(var i=0;i<7;i++){var x=new Date(a);x.setDate(a.getDate()+i);o.push(ymd(x));}return o;})():days;
@@ -688,15 +742,17 @@ function teRender(){var te=S.te,clock=te.clock;
   $("teStartBtn").textContent=te.start;$("teEndBtn").textContent=te.end;
   var m=dur(te.start,te.end);$("teSummary").innerHTML="";
   if(clock)$("teSummary").append("Clock starts now. Tap Clock off when you finish – you can adjust the times after.");
-  else $("teSummary").append(te.start+" → "+te.end+" · ",el("b",null,Math.floor(m/60)+"h "+pad(m%60)+"m"),te.mode==="Planned"?" scheduled":"");}
+  else $("teSummary").append(te.start+" → "+te.end+" · ",el("b",null,Math.floor(m/60)+"h "+pad(m%60)+"m"),te.mode==="Planned"?" booked":"");}
 $("teDate").onchange=function(e){if(e.target.value){S.te.date=e.target.value;teRender();}};
-$("teStartBtn").onclick=function(){timeSel("start");};$("teEndBtn").onclick=function(){timeSel("end");};
-function timeSel(k){var cur=toMin(S.te[k]),h=Math.floor(cur/60),mm=cur%60;$("tselTitle").textContent=k==="start"?"Start time":"Finish time";
-  var hg=$("tselH");hg.innerHTML="";for(var i=5;i<=23;i++)(function(i){hg.append(el("button",{type:"button","aria-pressed":i===h?"true":"false",onclick:function(){h=i;apply();}},pad(i)));})(i);
-  [0,1,2,3,4].forEach(function(i){hg.append(el("button",{type:"button","aria-pressed":i===h?"true":"false",onclick:function(){h=i;apply();}},pad(i)));});
-  var mg=$("tselM");mg.innerHTML="";[0,15,30,45].forEach(function(x){mg.append(el("button",{type:"button","aria-pressed":x===mm?"true":"false",onclick:function(){mm=x;apply();}},":"+pad(x)));});
-  function apply(){if(k==="start"){var len=dur(S.te.start,S.te.end);S.te.start=fromMin(h*60+mm);S.te.end=fromMin(h*60+mm+len);}else S.te.end=fromMin(h*60+mm);
-    hg.querySelectorAll("button").forEach(function(b){b.setAttribute("aria-pressed",+b.textContent===h?"true":"false");});mg.querySelectorAll("button").forEach(function(b){b.setAttribute("aria-pressed",b.textContent===":"+pad(mm)?"true":"false");});teRender();}
+$("teStartBtn").onclick=function(){timeSel("Start time",toMin(S.te.start),null,function(v){var len=dur(S.te.start,S.te.end);S.te.start=fromMin(v);S.te.end=fromMin(v+len);teRender();});};
+$("teEndBtn").onclick=function(){timeSel("Finish time",toMin(S.te.end),null,function(v){S.te.end=fromMin(v);teRender();});};
+$("teOpenJob").onclick=function(){var id=S.te&&$("teJob").value;$("timeSheet").hidden=true;if(id)openJob(id);};
+function timeSel(title,cur,maxH,onPick){var h=Math.floor(cur/60),mm=cur%60;$("tselTitle").textContent=title;
+  var hrs=[];if(maxH){for(var i=0;i<=maxH;i++)hrs.push(i);}else{for(var k=5;k<=23;k++)hrs.push(k);hrs.push(0,1,2,3,4);}
+  var hg=$("tselH");hg.innerHTML="";hrs.forEach(function(i){hg.append(el("button",{type:"button","aria-pressed":i===h?"true":"false",onclick:function(){h=i;apply();}},maxH?i+"h":pad(i)));});
+  var mg=$("tselM");mg.innerHTML="";[0,15,30,45].forEach(function(x){mg.append(el("button",{type:"button","aria-pressed":x===mm?"true":"false",onclick:function(){mm=x;apply();}},(maxH?"":":")+pad(x)+(maxH?"m":"")));});
+  function apply(){onPick(h*60+mm);
+    hg.querySelectorAll("button").forEach(function(b){b.setAttribute("aria-pressed",parseInt(b.textContent,10)===h?"true":"false");});mg.querySelectorAll("button").forEach(function(b){b.setAttribute("aria-pressed",parseInt(b.textContent.replace(":",""),10)===mm?"true":"false");});}
   $("tsel").hidden=false;}
 $("tselDone").onclick=function(){$("tsel").hidden=true;};$("tsel").onclick=function(e){if(e.target===$("tsel"))$("tsel").hidden=true;};
 $("teForm").onsubmit=function(e){e.preventDefault();var te=S.te,clock=te.clock;
@@ -704,31 +760,34 @@ $("teForm").onsubmit=function(e){e.preventDefault();var te=S.te,clock=te.clock;
   if(!rec.title.trim()&&!rec.jobId){toast("Pick what the time was for",true);return;}
   $("teSave").disabled=true;
   var p=clock?call("clockOn",S.token,rec):call("saveTime",S.token,rec);
-  p.then(function(){$("timeSheet").hidden=true;toast(clock?"Clocked on":rec.status==="Planned"?"Scheduled":"Time saved");S.day=rec.date;S.tsUser=rec.userId;$("tsUser").value=rec.userId;
+  p.then(function(){$("timeSheet").hidden=true;toast(clock?"Clocked on":rec.status==="Planned"?"Booking updated":"Time saved");S.day=rec.date;S.tsUser=rec.userId;$("tsUser").value=rec.userId;
     return load().then(function(){if(S.job&&!$("jobSheet").hidden)openJob(S.job.job.id);});}).catch(function(){}).then(function(){$("teSave").disabled=false;});};
 var delArmed=false;$("teDelete").onclick=function(){if(!delArmed){delArmed=true;$("teDelete").textContent="Tap again to delete";setTimeout(function(){delArmed=false;$("teDelete").textContent="Delete entry";},3000);return;}
   delArmed=false;$("teDelete").textContent="Delete entry";call("deleteTime",S.token,S.te.id).then(function(){$("timeSheet").hidden=true;toast("Deleted");load();}).catch(function(){});};
 
 /* ===================== team (admin) ===================== */
 function renderTeam(){if(!isAdmin())return;
-  var sl=$("signList");sl.innerHTML="";var w=S.d.jobs.filter(function(j){return j.status==="Awaiting sign-off";});$("signCount").textContent=w.length||"";
-  if(!w.length)sl.append(el("div",{class:"none"},"Nothing waiting. Completed jobs appear here for you to sign off."));
+  var sl=$("signList");sl.innerHTML="";var w=S.d.jobs.filter(function(j){return j.status==="To Admin";});$("signCount").textContent=w.length||"";
+  if(!w.length)sl.append(el("div",{class:"none"},"Nothing waiting. Jobs sent to Admin appear here for the paperwork check."));
   w.forEach(function(j){sl.append(el("button",{class:"job","data-p":j.priority,onclick:function(){openJob(j.id);}},el("span",{class:"stripe"}),el("span",{class:"body"},
     el("span",{class:"line1"},j.woRef?el("span",{class:"wo"},"WO "+j.woRef):el("span",{class:"flag"},"Not on IFMHub"),el("span",{class:"ref"},j.ref)),el("h3",null,j.title),
-    el("span",{class:"meta"},el("span",null,"Completed by "+uname(j.completedBy)),el("span",null,ago(j.completedAt))))));});
+    el("span",{class:"meta"},el("span",null,"Sent by "+uname(j.completedBy)),el("span",null,ago(j.completedAt))))));});
+  var nv=S.d.places.filter(function(p){return p.group==="Village";}),nu=S.d.places.filter(function(p){return p.group==="Venue";});
+  $("locCount").textContent=nv.length+" villages ("+nv.reduce(function(s,p){return s+p.locs.length;},0)+" units) and "+nu.length+" venues from the heater PPM checklist. Extra areas come from the Areas tab in the sheet.";
   $("todayLbl").textContent=fmtD(S.d.today,{weekday:"long",day:"numeric",month:"short"});
   var b=$("board");b.innerHTML="";var wk=weekDays(0);
   S.d.users.filter(function(u){return u.active;}).forEach(function(u){var today=S.d.time.filter(function(t){return t.userId===u.id&&t.date===S.d.today;}).sort(function(a,c){return a.start.localeCompare(c.start);});
     var wkH=S.d.time.filter(function(t){return t.userId===u.id&&wk.indexOf(t.date)>=0&&t.status==="Done";}).reduce(function(s,t){return s+(+t.hours||0);},0);
     var run=today.filter(function(t){return t.status==="Running";})[0];
-    var openJobs=S.d.jobs.filter(function(j){return j.assignedTo===u.id&&["Signed off","Awaiting sign-off"].indexOf(j.status)<0;}).length;
+    var openJobs=S.d.jobs.filter(function(j){return j.assignedTo===u.id&&["Complete","To Admin"].indexOf(j.status)<0;}).length;
     b.append(el("button",{class:"eng",onclick:function(){S.tsUser=u.id;$("tsUser").value=u.id;S.weekOff=0;S.day=S.d.today;setTab("time");}},
       el("div",{class:"top"},el("span",{class:"nm"},u.name),run?el("span",{class:"tag Running"},"On clock"):null,el("span",{class:"num sub"},fmtH(wkH)+" this wk")),
-      el("div",{class:"ln"},today.length?today.map(function(t){return el("span",null,t.start+(t.end?"–"+t.end:"")+"  "+t.title+(t.location?" · "+t.location:"")+(t.status==="Planned"?" (scheduled)":""));}):el("span",null,"Nothing scheduled today"),
+      el("div",{class:"ln"},today.length?today.map(function(t){return el("span",null,t.start+(t.end?"–"+t.end:"")+"  "+t.title+(t.location?" · "+t.location:"")+(t.status==="Planned"?" (booked)":""));}):el("span",null,"Nothing booked today"),
         el("span",null,openJobs+" open job"+(openJobs===1?"":"s")))));});
   var pp=$("people");pp.innerHTML="";S.d.users.slice().sort(function(a,c){return(c.active-a.active)||a.name.localeCompare(c.name);}).forEach(function(u){
     pp.append(el("div",{class:"person",style:u.active?null:"opacity:.55"},el("div",null,el("div",{style:"font-weight:600"},u.name+(u.id===S.d.me.id?" (you)":"")),el("span",{class:"rolechip "+u.role},u.active?u.role:"inactive")),
       el("button",{class:"btn small",onclick:function(){openPerson(u);}},"Edit")));});}
+$("syncLocs").onclick=function(){call("syncLocations",S.token).then(function(r){S.d.places=r.places;buildStatic();renderTeam();toast(r.count+" locations loaded from the heater list");}).catch(function(){});};
 $("addPerson").onclick=function(){openPerson(null);};$("pBack").onclick=function(){$("personSheet").hidden=true;};
 function openPerson(u){S.person=u;$("pForm").reset();$("pTitle").textContent=u?"Edit "+u.name:"Add engineer";$("pName").value=u?u.name:"";$("pRole").value=u?u.role:"engineer";$("pActive").checked=u?u.active:true;
   $("pActiveWrap").hidden=!u;$("pPinLbl").textContent=u?"Reset PIN (leave blank to keep)":"PIN (4–6 digits)";$("pPin").required=!u;$("personSheet").hidden=false;}

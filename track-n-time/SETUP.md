@@ -4,31 +4,35 @@ The Google Sheet **"Track’n’Time – Butlin's Skegness"** is already in your
 
 ## 1. Put the code in the sheet
 1. Open the sheet → **Extensions → Apps Script**.
-2. In `Code.gs`, delete what's there and paste everything from `apps-script/Code.gs` in this folder.
+2. In `Code.gs`, delete what's there and paste everything from `apps-script/Code.gs`.
 3. Click **+ → HTML**, name it `Index` (exactly), and paste everything from `apps-script/Index.html`.
 4. Click **Save** (disk icon).
-5. Pick `setup` in the function drop-down and click **Run**. Google asks for permission → **Review permissions → your account → Advanced → Go to (unsafe) → Allow**. This is your own script; Google shows that warning for any script that isn't published. The sheet now has its tabs.
+5. Pick `setup` in the function drop-down and click **Run**. Google asks for permission → **Review permissions → your account → Advanced → Go to (unsafe) → Allow**. It asks for access to your spreadsheets because it reads the village units and venues from your *Wall Heaters CBRE – Mobile Friendly V1* checklist. The sheet now has its tabs and a **Locations** tab filled from the heater list.
 
 ## 2. Publish it
 1. **Deploy → New deployment** → gear icon → **Web app**.
 2. Execute as: **Me**. Who has access: **Anyone**.
-3. **Deploy**, then copy the **Web app URL** (ends in `/exec`) and send it to Claude. Claude puts it into the home-screen app.
+3. **Deploy**, then copy the **Web app URL** (ends in `/exec`) and send it to Claude.
 
 ## 3. First login
-Open the link, enter your name and choose a PIN. You're the first admin. Then go to **Team → + Add engineer** for each person and give them their PIN. Tick "Admin" for anyone else who should assign jobs and sign off.
+Open the link, enter your name and choose a PIN. You're the first admin. Then **Team → + Add engineer** for each person.
 
 ## Updating later
-When the code changes: paste the new code, then **Deploy → Manage deployments → pencil → Version: New version → Deploy**. The link stays the same.
+Paste the new code, then **Deploy → Manage deployments → pencil → Version: New version → Deploy**. The link stays the same.
 
 ## How it works
+The **timesheet** is the home screen. Raising a job books it onto the timesheet: you pick the day, start time and how long you think it needs (your quote). Actual time is logged by clocking on, confirming the booked block, or adding time.
+
+**Job stages:** Scheduled → In progress → To Admin → Complete
+
 | | Admin | Engineer |
 |---|---|---|
-| Raise jobs | For anyone, or unassigned | Assigned to themselves |
-| Assign / reassign jobs | ✓ | – |
-| Work a job (time, materials, status) | Any job | Their own jobs |
-| Complete a job | ✓ | ✓ → goes to *Awaiting sign-off* |
-| Sign off / send back | ✓ | – |
-| Schedule time (e.g. PPM emergency lights) | Anyone's | Their own |
-| Add people, reset PINs | ✓ | – |
+| Raise and book jobs | For anyone, or unassigned | Onto their own timesheet |
+| Assign / reassign | ✓ (moves the booking) | – |
+| Scheduled ↔ In progress | ✓ | Own jobs |
+| Send to Admin (with report) | ✓ | Own jobs |
+| Mark Complete (after paperwork check) | ✓ | – |
+| Send back to engineer | ✓ | – |
+| Add people, reset PINs, refresh locations | ✓ | – |
 
-Areas and the quick "What" buttons on the timesheet (PPM – Emergency lights etc.) come from the **Areas** and **Presets** tabs in the sheet. Edit those tabs to change them.
+Locations: villages and units, and venues with floors, come from the heater PPM checklist. Admins can tap **Team → Refresh from heater list** after the checklist changes. Extra areas (plant rooms, car parks…) live in the **Areas** tab, and the quick buttons on Log time live in **Presets**.
