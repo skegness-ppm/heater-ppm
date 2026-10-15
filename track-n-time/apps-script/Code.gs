@@ -1,5 +1,5 @@
 /**
- * Site Jobs – Butlin's Skegness (CBRE engineering)
+ * Track’n’Time – Butlin's Skegness (CBRE engineering)
  * Google Apps Script backend. The Google Sheet this script is attached to is the database.
  *
  * Roles
@@ -11,7 +11,7 @@
  * Deploy: Deploy > New deployment > Web app > Execute as: Me > Who has access: Anyone.
  */
 
-const APP_NAME = 'Site Jobs';
+const APP_NAME = 'Track’n’Time';
 const SESSION_DAYS = 60;
 
 const SHEETS = {
@@ -55,7 +55,7 @@ function doGet() {
 /** Run once from the editor (optional – the app also does this on first open). */
 function setup() {
   ensure_();
-  SpreadsheetApp.getActive().toast('Site Jobs tabs are ready.');
+  SpreadsheetApp.getActive().toast('Track’n’Time tabs are ready.');
 }
 
 /* ======================= Sheet helpers ======================= */

@@ -1,6 +1,6 @@
 // Keeps the app's home screen (icon + "no signal" message) available offline.
-// The Site Jobs app itself always comes live from Google.
-var CACHE = "site-jobs-v1";
+// The Track’n’Time app itself always comes live from Google.
+var CACHE = "track-n-time-v1";
 var FILES = ["./", "index.html", "manifest.json", "icon-192.png", "icon-512.png", "icon-maskable-512.png"];
 
 self.addEventListener("install", function (e) {

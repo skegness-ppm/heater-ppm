@@ -1,6 +1,6 @@
-# Site Jobs – setup (about 5 minutes, best done on a computer)
+# Track’n’Time – setup (about 5 minutes, best done on a computer)
 
-The Google Sheet **"Site Jobs – Butlin's Skegness"** is already in your Google Drive. It's the database: every job, timesheet entry, material and note is a row in it.
+The Google Sheet **"Track’n’Time – Butlin's Skegness"** is already in your Google Drive. It's the database: every job, timesheet entry, material and note is a row in it.
 
 ## 1. Put the code in the sheet
 1. Open the sheet → **Extensions → Apps Script**.
